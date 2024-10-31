@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h2>Welcome to Your Dashboard</h2>
+    <div id="user-info"></div>
+
+    <nav>
+        <ul>
+            <li><a href="/messaging">Messaging</a></li>
+            <li><a href="/announcements">Announcements</a></li>
+            <li><button onclick="logout()">Logout</button></li>
+        </ul>
+    </nav>
+
+    <script>
+        // Access token from local storage
+        const token = localStorage.getItem('accessToken');
+
+        // Fetch user info from the server
+        async function fetchUserInfo() {
+            const response = await fetch('/user_info', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const user = await response.json();
+            document.getElementById('user-info').innerHTML = `<p>Welcome, ${user.username}! Role: ${user.role}</p>`;
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('accessToken');
+            window.location.href = '/login';
+        }
+
+        // Load user info on page load
+        fetchUserInfo();
+    </script>
+</body>
+</html>
+
+# backend/routes/auth_routes.py
+
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+@auth_routes.route('/user_info', methods=['GET'])
+@jwt_required()
+def user_info():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user['username']).first()
+    return jsonify({
+        "username": user.username,
+        "role": user.role
+    }), 200
+
+<script>
+    async function fetchUserInfo() {
+        const response = await fetch('/user_info', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const user = await response.json();
+        document.getElementById('user-info').innerHTML = `<p>Welcome, ${user.username}! Role: ${user.role}</p>`;
+
+        // Show features based on role
+        if (user.role === 'admin' || user.role === 'teacher') {
+            const postAnnouncement = document.createElement('li');
+            postAnnouncement.innerHTML = `<a href="/post_announcement">Post Announcement</a>`;
+            document.querySelector('nav ul').appendChild(postAnnouncement);
+        }
+    }
+</script>
